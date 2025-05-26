@@ -2,6 +2,61 @@
 
 An ESP32-based feedback response system that dispenses rewards based on new feedback submissions. The system monitors reward container levels and handles dispensing automatically.
 
+## Flowchart
+```mermaid
+flowchart TD
+    A[ESP32 Startup] --> B[Initialize Components]
+    B --> C[Connect to WiFi]
+    C --> D{WiFi Connected?}
+    D -->|No| E[Blink Orange LED<br/>Wait & Retry]
+    E --> C
+    D -->|Yes| F[Blink Green LED<br/>3 times]
+    
+    F --> G[Main Loop Start]
+    G --> H[Read Ultrasonic Distance]
+    H --> I{Distance > 8cm?}
+    I -->|Yes| J[Set LED Red]
+    I -->|No| K[Set LED Dark Pink]
+    
+    J --> L[Check WiFi Status]
+    K --> L
+    L --> M{WiFi Connected?}
+    M -->|No| N[Blink Orange LED<br/>Reconnect WiFi]
+    N --> C
+    
+    M -->|Yes| O[Blink Blue LED<br/>Quick Flash]
+    O --> P[HTTP GET Request<br/>to API Endpoint]
+    P --> Q{HTTP Response<br/>Code = 200?}
+    
+    Q -->|No| R[Blink Red LED<br/>2 times]
+    R --> S[Wait 1 Second]
+    
+    Q -->|Yes| T[Parse JSON Response]
+    T --> U{JSON Parse<br/>Successful?}
+    U -->|No| V[Blink Red LED<br/>2 times]
+    V --> S
+    
+    U -->|Yes| W[Extract latest_id]
+    W --> X{latest_id ≠<br/>previousId?}
+    X -->|No| S
+    X -->|Yes| Y[New Feedback Detected!]
+    
+    Y --> Z[Blink Green LED<br/>10 times]
+    Z --> AA[Trigger Servo Dispense]
+    AA --> BB[Servo: 180° → 0°]
+    BB --> CC[Servo: 0° → 180°]
+    CC --> DD[Update previousId]
+    DD --> S
+    
+    S --> G
+    
+    style A fill:#e1f5fe
+    style Y fill:#c8e6c9
+    style AA fill:#fff3e0
+    style R fill:#ffcdd2
+    style V fill:#ffcdd2
+    style N fill:#ffe0b2
+```
 ## Hardware Requirements
 
 - ESP32-S3 DevKit
